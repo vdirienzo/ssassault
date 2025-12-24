@@ -25,6 +25,27 @@
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/01.jpeg" width="45%" alt="Level 1: Space - SPREAD weapon"/>
+  <img src="screenshots/02.jpeg" width="45%" alt="Level 1: Space - Bullet Hell chaos"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/03.jpeg" width="45%" alt="Level 2: Atmosphere - Clouds"/>
+  <img src="screenshots/04.jpeg" width="45%" alt="Level 5: Inferno - Fire and lava"/>
+</p>
+
+| Screenshot | Description |
+|------------|-------------|
+| **01** | Level 1: SPACE - Gameplay with SPREAD weapon |
+| **02** | Level 1: SPACE - Intense bullet hell with WAVE weapon |
+| **03** | Level 2: ATMOSPHERE - Sky with clouds and APOCALYPSE weapon |
+| **04** | Level 5: INFERNO - Fire, lava, and falling rocks |
+
+---
+
 ## Play Now
 
 Simply open `ssassault.html` in any modern browser. No installation required!
@@ -114,7 +135,12 @@ HTML5 + CSS3 + Vanilla JavaScript
 ```
 SSAssault/
 ├── README.md
-└── ssassault.html      # Complete game (HTML + CSS + JS)
+├── ssassault.html              # Complete game (HTML + CSS + JS)
+└── screenshots/
+    ├── 01.jpeg                 # Level 1: Space
+    ├── 02.jpeg                 # Level 1: Bullet hell
+    ├── 03.jpeg                 # Level 2: Atmosphere
+    └── 04.jpeg                 # Level 5: Inferno
 ```
 
 The entire game is contained in a single HTML file featuring:
