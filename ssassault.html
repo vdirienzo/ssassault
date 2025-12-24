@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Sistem Assault</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: radial-gradient(ellipse at center, #0a0015 0%, #000000 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Orbitron', monospace;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255, 0, 100, 0.03) 2px,
+                    rgba(255, 0, 100, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        #gameContainer {
+            position: relative;
+            box-shadow: 
+                0 0 80px rgba(0, 255, 255, 0.3),
+                0 0 40px rgba(255, 0, 100, 0.3),
+                inset 0 0 60px rgba(0, 0, 0, 0.8);
+            border: 4px solid #00ffff;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #000814 0%, #001845 100%);
+            z-index: 2;
+        }
+        
+        canvas {
+            display: block;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #00ffff;
+            font-size: 14px;
+            text-shadow: 
+                0 0 10px rgba(0, 255, 255, 0.8),
+                0 0 20px rgba(0, 255, 255, 0.4);
+            font-weight: 700;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        #ui div {
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        
+        .score {
+            color: #ffff00;
+            text-shadow: 
+                0 0 10px rgba(255, 255, 0, 0.8),
+                0 0 20px rgba(255, 255, 0, 0.4);
+        }
+        
+        .lives {
+            color: #ff00ff;
+            text-shadow: 
+                0 0 10px rgba(255, 0, 255, 0.8),
+                0 0 20px rgba(255, 0, 255, 0.4);
+        }
+        
+        #gameOver, #startScreen, #victory, #pauseScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 10px;
+            border: 3px solid #00ffff;
+            box-shadow: 
+                0 0 40px rgba(0, 255, 255, 0.6),
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+        
+        #pauseScreen {
+            background: rgba(0, 0, 0, 0.95);
+        }
+        
+        #victory {
+            border-color: #ffff00;
+            box-shadow: 
+                0 0 60px rgba(255, 255, 0, 0.8),
+                0 0 100px rgba(255, 100, 0, 0.4),
+                inset 0 0 30px rgba(255, 255, 0, 0.2);
+            animation: victoryPulse 2s infinite, victoryGlow 3s infinite;
+        }
+        
+        #victory h1 {
+            color: #ffff00;
+            text-shadow: 
+                0 0 20px rgba(255, 255, 0, 0.8),
+                0 0 40px rgba(255, 255, 0, 0.4),
+                0 0 60px rgba(255, 100, 0, 0.6);
+            animation: victoryBounce 1s infinite, colorCycle 3s infinite;
+        }
+        
+        @keyframes victoryPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.02); }
+        }
+        
+        @keyframes victoryGlow {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 60px rgba(255, 255, 0, 0.8),
+                    0 0 100px rgba(255, 100, 0, 0.4),
+                    inset 0 0 30px rgba(255, 255, 0, 0.2);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 80px rgba(255, 255, 0, 1),
+                    0 0 120px rgba(255, 100, 0, 0.6),
+                    inset 0 0 40px rgba(255, 255, 0, 0.3);
+            }
+        }
+        
+        @keyframes victoryBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+        }
+        
+        @keyframes colorCycle {
+            0% { color: #ffff00; }
+            33% { color: #ff6600; }
+            66% { color: #ff00ff; }
+            100% { color: #ffff00; }
+        }
+        
+        #gameOver h1, #startScreen h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #ff0055;
+            text-shadow: 
+                0 0 20px rgba(255, 0, 85, 0.8),
+                0 0 40px rgba(255, 0, 85, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        #startScreen h1 {
+            color: #00ffff;
+            text-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.8),
+                0 0 40px rgba(0, 255, 255, 0.4);
+        }
+        
+        #startScreen .subtitle {
+            font-size: 18px;
+            color: #ffff00;
+            margin-bottom: 30px;
+            text-shadow: 
+                0 0 10px rgba(255, 255, 0, 0.6);
+        }
+        
+        button {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            padding: 15px 40px;
+            margin-top: 20px;
+            background: linear-gradient(45deg, #ff0055, #ff6600);
+            color: white;
+            border: 3px solid #ffff00;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 
+                0 0 20px rgba(255, 0, 85, 0.6),
+                0 5px 15px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 0 40px rgba(255, 0, 85, 0.9),
+                0 5px 20px rgba(0, 0, 0, 0.6);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+        
+        .controls {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #00ffff;
+            line-height: 1.8;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <div id="ui">
+            <div>NIVEL: <span id="stage" class="score">1: ESPACIO</span></div>
+            <div>SCORE: <span id="score" class="score">0</span></div>
+            <div>HI-SCORE: <span id="hiScore" class="score">0</span></div>
+            <div>LIVES: <span id="lives" class="lives">3</span></div>
+            <div>ARMA: <span id="weapon" class="score">VULCAN</span></div>
+            <div id="godModeIndicator" class="hidden" style="color: #ff00ff; font-size: 16px; font-weight: 900; margin-top: 15px; text-shadow: 0 0 15px rgba(255, 0, 255, 1), 0 0 30px rgba(255, 0, 255, 0.6);">
+                ⚡ GOD MODE ⚡
+            </div>
+        </div>
+        
+        <div id="startScreen">
+            <h1>SISTEMA SISTEM</h1>
+            <div class="subtitle">ASSAULT</div>
+            <div class="controls">
+                <div>FLECHAS: Mover nave</div>
+                <div>ESPACIO: Disparar</div>
+                <div>P / ESC: Pausa</div>
+                <div>1-5: Saltar a nivel específico</div>
+                <div>G: Activar/Desactivar God Mode (Testing)</div>
+                <div>¡Recoge power-ups (P) para mejorar tu arma!</div>
+                <div>¡Esquiva miles de proyectiles!</div>
+            </div>
+            <button onclick="startGame()">PRESS START</button>
+        </div>
+        
+        <div id="gameOver" class="hidden">
+            <h1>GAME OVER</h1>
+            <div class="score">SCORE: <span id="finalScore">0</span></div>
+            <button onclick="restartGame()">CONTINUE</button>
+        </div>
+        
+        <div id="victory" class="hidden">
+            <h1 style="font-size: 22px;">¡¡¡VICTORIA TOTAL!!!</h1>
+            <div class="subtitle" style="font-size: 17px; margin: 14px 0; color: #ffff00;">
+                🎉 ¡FELICITACIONES! 🎉
+            </div>
+            <div style="font-size: 13px; color: #00ffff; margin: 10px 0; line-height: 1.6;">
+                ¡Has derrotado al APOCALYPSE!<br>
+                ¡Completaste los 5 niveles y<br>
+                sobreviviste al infierno de balas!
+            </div>
+            <div class="score" style="font-size: 20px; margin: 14px 0;">
+                SCORE FINAL: <span id="victoryScore">0</span>
+            </div>
+            <div style="font-size: 10px; color: #ff00ff; margin: 10px 0;">
+                ¡Eres un verdadero maestro del Bullet Hell!
+            </div>
+            <button onclick="restartGame()">JUGAR DE NUEVO</button>
+        </div>
+        
+        <div id="pauseScreen" class="hidden">
+            <h1>PAUSA</h1>
+            <div class="controls" style="margin-top: 20px;">
+                <div>P / ESC: Reanudar</div>
+                <div>1-5: Saltar a nivel específico</div>
+                <div>G: Toggle God Mode</div>
+            </div>
+            <button onclick="togglePause()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameState = 'start';
+        let score = 0;
+        let hiScore = localStorage.getItem('hiScore') || 0;
+        let lives = 3;
+        let stage = 1;
+        let frame = 0;
+        let godMode = false; // Cheat mode - invincibility
+        let paused = false; // Pause state
+        
+        // Player
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 80,
+            width: 20,
+            height: 20,
+            speed: 4,
+            hitboxRadius: 3,
+            bullets: [],
+            fireRate: 5,
+            fireTimer: 0,
+            weaponLevel: 1,
+            maxWeaponLevel: 5
+        };
+        
+        // Enemies
+        let enemies = [];
+        let bosses = [];
+        let enemyBullets = [];
+        let particles = [];
+        let powerups = [];
+        
+        // Input
+        const keys = {};
+        
+        // Background stars
+        const stars = Array.from({length: 100}, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            speed: Math.random() * 2 + 1,
+            brightness: Math.random()
+        }));
+        
+        // Level-specific background elements
+        let backgroundElements = [];
+        let destructibles = [];
+        
+        function initLevelBackground() {
+            backgroundElements = [];
+            destructibles = [];
+            
+            switch(stage) {
+                case 1: // ESPACIO - Solo estrellas
+                    // Estrellas ya están definidas globalmente
+                    // No agregamos planetas para mantenerlo limpio
+                    break;
+                    
+                case 2: // NUBES Y ATMÓSFERA
+                    for (let i = 0; i < 15; i++) {
+                        backgroundElements.push({
+                            type: 'cloud',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: Math.random() * 1 + 0.5,
+                            size: Math.random() * 80 + 60,
+                            opacity: Math.random() * 0.3 + 0.2
+                        });
+                    }
+                    break;
+                    
+                case 3: // SUPERFICIE - Vista superior de terreno
+                    // Parches de pasto oscuro/claro
+                    for (let i = 0; i < 15; i++) {
+                        backgroundElements.push({
+                            type: 'grassPatch',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: 2,
+                            size: Math.random() * 40 + 30,
+                            shade: Math.random() > 0.5 ? 'dark' : 'light'
+                        });
+                    }
+                    // Árboles vistos desde arriba (círculos verdes)
+                    for (let i = 0; i < 20; i++) {
+                        backgroundElements.push({
+                            type: 'treeTopDown',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: 2,
+                            size: Math.random() * 25 + 15,
+                            shadeVariation: Math.random()
+                        });
+                    }
+                    // Rocas grises
+                    for (let i = 0; i < 10; i++) {
+                        backgroundElements.push({
+                            type: 'rock',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: 2,
+                            size: Math.random() * 15 + 10,
+                            rotation: Math.random() * Math.PI * 2
+                        });
+                    }
+                    // Flores/arbustos pequeños
+                    for (let i = 0; i < 25; i++) {
+                        backgroundElements.push({
+                            type: 'flower',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: 2,
+                            size: Math.random() * 8 + 4,
+                            color: ['#ff69b4', '#ffff00', '#ff6600'][Math.floor(Math.random() * 3)]
+                        });
+                    }
+                    // Estructuras destructibles (vista superior)
+                    for (let i = 0; i < 5; i++) {
+                        destructibles.push({
+                            type: 'buildingTopDown',
+                            x: Math.random() * (canvas.width - 60) + 30,
+                            y: -Math.random() * 400 - 100,
+                            speed: 2,
+                            width: 50,
+                            height: 50,
+                            health: 3,
+                            points: 500
+                        });
+                    }
+                    break;
+                    
+                case 4: // OCÉANO
+                    for (let i = 0; i < 20; i++) {
+                        backgroundElements.push({
+                            type: 'bubble',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: Math.random() * 1 + 0.5,
+                            size: Math.random() * 8 + 4,
+                            wobble: Math.random() * Math.PI * 2
+                        });
+                    }
+                    // Peces
+                    for (let i = 0; i < 6; i++) {
+                        backgroundElements.push({
+                            type: 'fish',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: Math.random() * 0.8 + 0.4,
+                            size: Math.random() * 30 + 20,
+                            direction: Math.random() > 0.5 ? 1 : -1
+                        });
+                    }
+                    break;
+                    
+                case 5: // INFIERNO / CENTRO DE LA TIERRA
+                    for (let i = 0; i < 25; i++) {
+                        backgroundElements.push({
+                            type: 'flame',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: Math.random() * 2 + 1,
+                            size: Math.random() * 20 + 10,
+                            intensity: Math.random()
+                        });
+                    }
+                    // Lava rocks
+                    for (let i = 0; i < 10; i++) {
+                        backgroundElements.push({
+                            type: 'lavaRock',
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            speed: Math.random() * 1.5 + 0.5,
+                            size: Math.random() * 25 + 15,
+                            rotation: Math.random() * Math.PI * 2
+                        });
+                    }
+                    break;
+            }
+        }
+        
+        // Enemy patterns
+        class Enemy {
+            constructor(x, y, type = 'scout') {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.width = 30;
+                this.height = 30;
+                this.shootTimer = 0;
+                this.angle = 0;
+                this.startX = x;
+                this.rotationAngle = 0;
+                
+                // Type-specific properties
+                switch(type) {
+                    case 'scout': // Fast, weak, single shot
+                        this.health = 1;
+                        this.speed = 3;
+                        this.shootRate = 80;
+                        this.movePattern = 'zigzag';
+                        this.color = '#00ff88';
+                        this.points = 100;
+                        break;
+                    case 'heavy': // Slow, tough, circular pattern
+                        this.health = 5;
+                        this.speed = 1;
+                        this.shootRate = 40;
+                        this.movePattern = 'sine';
+                        this.color = '#ff6600';
+                        this.points = 250;
+                        break;
+                    case 'sniper': // Medium speed, aimed shots
+                        this.health = 2;
+                        this.speed = 2;
+                        this.shootRate = 90;
+                        this.movePattern = 'straight';
+                        this.color = '#ff00ff';
+                        this.points = 150;
+                        break;
+                    case 'bomber': // Drops bullet walls
+                        this.health = 3;
+                        this.speed = 1.5;
+                        this.shootRate = 120;
+                        this.movePattern = 'circle';
+                        this.color = '#ffff00';
+                        this.points = 200;
+                        break;
+                    case 'assault': // Fast, spiral shots
+                        this.health = 3;
+                        this.speed = 2.5;
+                        this.shootRate = 50;
+                        this.movePattern = 'dive';
+                        this.color = '#00ffff';
+                        this.points = 180;
+                        break;
+                }
+            }
+            
+            update() {
+                this.rotationAngle += 0.1;
+                
+                switch(this.movePattern) {
+                    case 'zigzag':
+                        this.y += this.speed;
+                        this.angle += 0.1;
+                        this.x = this.startX + Math.sin(this.angle) * 80;
+                        break;
+                    case 'sine':
+                        this.y += this.speed;
+                        this.angle += 0.05;
+                        this.x = this.startX + Math.sin(this.angle) * 50;
+                        break;
+                    case 'straight':
+                        this.y += this.speed;
+                        break;
+                    case 'circle':
+                        this.y += this.speed * 0.8;
+                        this.angle += 0.03;
+                        this.x = this.startX + Math.cos(this.angle) * 60;
+                        break;
+                    case 'dive':
+                        this.y += this.speed;
+                        if (this.y > canvas.height / 3 && this.y < canvas.height / 2) {
+                            const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
+                            this.x += Math.cos(angleToPlayer) * 2;
+                        }
+                        break;
+                }
+                
+                this.shootTimer++;
+                if (this.shootTimer >= this.shootRate && this.y > 50) {
+                    this.shoot();
+                    this.shootTimer = 0;
+                }
+            }
+            
+            shoot() {
+                switch(this.type) {
+                    case 'scout':
+                        // Single aimed shot
+                        const angle1 = Math.atan2(player.y - this.y, player.x - this.x);
+                        enemyBullets.push({
+                            x: this.x,
+                            y: this.y,
+                            vx: Math.cos(angle1) * 3,
+                            vy: Math.sin(angle1) * 3,
+                            color: '#00ff88',
+                            radius: 3
+                        });
+                        break;
+                        
+                    case 'heavy':
+                        // 12-way circular pattern
+                        for (let i = 0; i < 12; i++) {
+                            const angle = (Math.PI * 2 / 12) * i + frame * 0.02;
+                            enemyBullets.push({
+                                x: this.x,
+                                y: this.y,
+                                vx: Math.cos(angle) * 2,
+                                vy: Math.sin(angle) * 2,
+                                color: '#ff0055',
+                                radius: 4
+                            });
+                        }
+                        break;
+                        
+                    case 'sniper':
+                        // Triple aimed shot
+                        const angle2 = Math.atan2(player.y - this.y, player.x - this.x);
+                        for (let i = -1; i <= 1; i++) {
+                            enemyBullets.push({
+                                x: this.x,
+                                y: this.y,
+                                vx: Math.cos(angle2 + i * 0.2) * 4,
+                                vy: Math.sin(angle2 + i * 0.2) * 4,
+                                color: '#ff00ff',
+                                radius: 3
+                            });
+                        }
+                        break;
+                        
+                    case 'bomber':
+                        // Bullet wall downward
+                        for (let i = -3; i <= 3; i++) {
+                            enemyBullets.push({
+                                x: this.x + i * 15,
+                                y: this.y,
+                                vx: 0,
+                                vy: 2.5,
+                                color: '#ffff00',
+                                radius: 4
+                            });
+                        }
+                        break;
+                        
+                    case 'assault':
+                        // Spiral pattern
+                        for (let i = 0; i < 4; i++) {
+                            const angle = (Math.PI * 2 / 4) * i + this.rotationAngle;
+                            enemyBullets.push({
+                                x: this.x,
+                                y: this.y,
+                                vx: Math.cos(angle) * 2.5,
+                                vy: Math.sin(angle) * 2.5,
+                                color: '#00ffff',
+                                radius: 3
+                            });
+                        }
+                        break;
+                }
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotationAngle);
+                
+                // Glow effect
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+                
+                // Different shapes for different types
+                ctx.fillStyle = this.color;
+                
+                switch(this.type) {
+                    case 'scout':
+                        // Small triangle
+                        ctx.beginPath();
+                        ctx.moveTo(0, -12);
+                        ctx.lineTo(-10, 12);
+                        ctx.lineTo(10, 12);
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                        
+                    case 'heavy':
+                        // Large pentagon
+                        ctx.beginPath();
+                        for (let i = 0; i < 5; i++) {
+                            const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                            const x = Math.cos(angle) * 18;
+                            const y = Math.sin(angle) * 18;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                        
+                    case 'sniper':
+                        // Diamond shape
+                        ctx.beginPath();
+                        ctx.moveTo(0, -15);
+                        ctx.lineTo(-8, 0);
+                        ctx.lineTo(0, 15);
+                        ctx.lineTo(8, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                        
+                    case 'bomber':
+                        // Square
+                        ctx.fillRect(-12, -12, 24, 24);
+                        break;
+                        
+                    case 'assault':
+                        // Hexagon
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (Math.PI * 2 / 6) * i;
+                            const x = Math.cos(angle) * 14;
+                            const y = Math.sin(angle) * 14;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                }
+                
+                // Core
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+        
+        class Boss {
+            constructor(level) {
+                this.level = level;
+                this.x = canvas.width / 2;
+                this.y = 100;
+                this.width = 80;
+                this.height = 80;
+                this.phase = 1;
+                this.shootTimer = 0;
+                this.angle = 0;
+                this.moveTimer = 0;
+                this.attackPattern = 0;
+                
+                // Level-specific properties
+                switch(level) {
+                    case 1: // Guardian - Basic boss
+                        this.health = 80;
+                        this.maxHealth = 80;
+                        this.name = 'GUARDIAN';
+                        this.color = '#00ff88';
+                        this.size = 60;
+                        break;
+                    case 2: // Destroyer - More aggressive
+                        this.health = 120;
+                        this.maxHealth = 120;
+                        this.name = 'DESTROYER';
+                        this.color = '#ff6600';
+                        this.size = 70;
+                        break;
+                    case 3: // Annihilator - Multi-phase
+                        this.health = 160;
+                        this.maxHealth = 160;
+                        this.name = 'ANNIHILATOR';
+                        this.color = '#ff00ff';
+                        this.size = 80;
+                        break;
+                    case 4: // Devastator - Bullet hell master
+                        this.health = 200;
+                        this.maxHealth = 200;
+                        this.name = 'DEVASTATOR';
+                        this.color = '#ffff00';
+                        this.size = 90;
+                        break;
+                    case 5: // Apocalypse - Final boss
+                        this.health = 300;
+                        this.maxHealth = 300;
+                        this.name = 'APOCALYPSE';
+                        this.color = '#ff0055';
+                        this.size = 100;
+                        break;
+                }
+            }
+            
+            update() {
+                this.moveTimer += 0.02;
+                this.x = canvas.width / 2 + Math.sin(this.moveTimer) * 120;
+                
+                this.shootTimer++;
+                this.angle += 0.05;
+                
+                // Phase changes based on health
+                if (this.health < this.maxHealth * 0.7) this.phase = 2;
+                if (this.health < this.maxHealth * 0.4) this.phase = 3;
+                
+                // Attack patterns based on level
+                switch(this.level) {
+                    case 1:
+                        this.bossPattern1();
+                        break;
+                    case 2:
+                        this.bossPattern2();
+                        break;
+                    case 3:
+                        this.bossPattern3();
+                        break;
+                    case 4:
+                        this.bossPattern4();
+                        break;
+                    case 5:
+                        this.bossPattern5();
+                        break;
+                }
+            }
+            
+            bossPattern1() {
+                // Guardian - Simple spiral and aimed shots
+                if (this.shootTimer % 20 === 0) {
+                    this.spiralPattern(8);
+                }
+                if (this.shootTimer % 60 === 0 && this.phase >= 2) {
+                    this.aimedShots(3);
+                }
+            }
+            
+            bossPattern2() {
+                // Destroyer - Faster spirals + bullet walls
+                if (this.shootTimer % 15 === 0) {
+                    this.spiralPattern(12);
+                }
+                if (this.shootTimer % 45 === 0) {
+                    this.bulletWall();
+                }
+                if (this.shootTimer % 80 === 0 && this.phase >= 2) {
+                    this.randomBurst(25);
+                }
+            }
+            
+            bossPattern3() {
+                // Annihilator - Complex patterns
+                if (this.shootTimer % 12 === 0) {
+                    this.spiralPattern(16);
+                }
+                if (this.shootTimer % 40 === 0) {
+                    this.crossPattern();
+                }
+                if (this.shootTimer % 70 === 0 && this.phase >= 2) {
+                    this.circleExplosion(30);
+                }
+                if (this.phase === 3 && this.shootTimer % 30 === 0) {
+                    this.aimedShots(5);
+                }
+            }
+            
+            bossPattern4() {
+                // Devastator - Extreme bullet hell
+                if (this.shootTimer % 10 === 0) {
+                    this.spiralPattern(20);
+                }
+                if (this.shootTimer % 25 === 0) {
+                    this.doubleSpiral();
+                }
+                if (this.shootTimer % 50 === 0) {
+                    this.randomBurst(40);
+                }
+                if (this.phase >= 2 && this.shootTimer % 35 === 0) {
+                    this.bulletWall();
+                    this.circleExplosion(20);
+                }
+            }
+            
+            bossPattern5() {
+                // Apocalypse - Everything combined
+                if (this.shootTimer % 8 === 0) {
+                    this.spiralPattern(24);
+                }
+                if (this.shootTimer % 20 === 0) {
+                    this.doubleSpiral();
+                }
+                if (this.shootTimer % 30 === 0) {
+                    this.crossPattern();
+                }
+                if (this.shootTimer % 40 === 0) {
+                    this.randomBurst(50);
+                }
+                if (this.phase >= 2 && this.shootTimer % 25 === 0) {
+                    this.circleExplosion(35);
+                }
+                if (this.phase === 3 && this.shootTimer % 15 === 0) {
+                    this.aimedShots(8);
+                    this.bulletWall();
+                }
+            }
+            
+            spiralPattern(count) {
+                for (let i = 0; i < count; i++) {
+                    const angle = (Math.PI * 2 / count) * i + this.angle;
+                    enemyBullets.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle) * 2.5,
+                        vy: Math.sin(angle) * 2.5,
+                        color: this.color,
+                        radius: 5
+                    });
+                }
+            }
+            
+            doubleSpiral() {
+                for (let i = 0; i < 16; i++) {
+                    const angle1 = (Math.PI * 2 / 16) * i + this.angle;
+                    const angle2 = (Math.PI * 2 / 16) * i - this.angle;
+                    
+                    enemyBullets.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle1) * 3,
+                        vy: Math.sin(angle1) * 3,
+                        color: '#ff00ff',
+                        radius: 4
+                    });
+                    
+                    enemyBullets.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle2) * 2,
+                        vy: Math.sin(angle2) * 2,
+                        color: '#00ffff',
+                        radius: 4
+                    });
+                }
+            }
+            
+            randomBurst(count) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 3 + 2;
+                    enemyBullets.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        color: '#ffff00',
+                        radius: 4
+                    });
+                }
+            }
+            
+            aimedShots(count) {
+                const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
+                for (let i = 0; i < count; i++) {
+                    const spread = (i - (count - 1) / 2) * 0.15;
+                    enemyBullets.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angleToPlayer + spread) * 4,
+                        vy: Math.sin(angleToPlayer + spread) * 4,
+                        color: '#ff0055',
+                        radius: 5
+                    });
+                }
+            }
+            
+            bulletWall() {
+                for (let i = 0; i < 10; i++) {
+                    enemyBullets.push({
+                        x: i * (canvas.width / 9),
+                        y: this.y + 30,
+                        vx: 0,
+                        vy: 2,
+                        color: '#00ff88',
+                        radius: 5
+                    });
+                }
+            }
+            
+            crossPattern() {
+                for (let i = -5; i <= 5; i++) {
+                    // Horizontal
+                    enemyBullets.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: i * 0.8,
+                        vy: 0,
+                        color: '#ff6600',
+                        radius: 4
+                    });
+                    // Vertical
+                    enemyBullets.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: 0,
+                        vy: i * 0.8,
+                        color: '#ff6600',
+                        radius: 4
+                    });
+                }
+            }
+            
+            circleExplosion(count) {
+                for (let i = 0; i < count; i++) {
+                    const angle = (Math.PI * 2 / count) * i;
+                    enemyBullets.push({
+                        x: this.x,
+                        y: this.y,
+                        vx: Math.cos(angle) * 3.5,
+                        vy: Math.sin(angle) * 3.5,
+                        color: '#ffffff',
+                        radius: 6
+                    });
+                }
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Boss name
+                ctx.fillStyle = this.color;
+                ctx.font = 'bold 14px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillText(this.name, 0, -this.size - 20);
+                
+                // Health bar
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(-60, -this.size - 10, 120, 8);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(-60, -this.size - 10, 120, 8);
+                
+                const healthBarWidth = 120 * (this.health / this.maxHealth);
+                ctx.fillStyle = this.health < this.maxHealth * 0.3 ? '#ff0000' : '#00ff00';
+                ctx.fillRect(-60, -this.size - 10, healthBarWidth, 8);
+                
+                // Boss body - different shapes per level
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                
+                switch(this.level) {
+                    case 1:
+                        // Pentagon
+                        ctx.beginPath();
+                        for (let i = 0; i < 5; i++) {
+                            const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                            const x = Math.cos(angle) * (this.size / 2);
+                            const y = Math.sin(angle) * (this.size / 2);
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                        
+                    case 2:
+                        // Hexagon
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (Math.PI * 2 / 6) * i;
+                            const x = Math.cos(angle) * (this.size / 2);
+                            const y = Math.sin(angle) * (this.size / 2);
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                        
+                    case 3:
+                        // Star
+                        ctx.beginPath();
+                        for (let i = 0; i < 10; i++) {
+                            const angle = (Math.PI * 2 / 10) * i - Math.PI / 2;
+                            const radius = i % 2 === 0 ? this.size / 2 : this.size / 4;
+                            const x = Math.cos(angle) * radius;
+                            const y = Math.sin(angle) * radius;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                        
+                    case 4:
+                        // Octagon
+                        ctx.beginPath();
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (Math.PI * 2 / 8) * i;
+                            const x = Math.cos(angle) * (this.size / 2);
+                            const y = Math.sin(angle) * (this.size / 2);
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                        
+                    case 5:
+                        // Complex multi-layer
+                        for (let layer = 3; layer > 0; layer--) {
+                            ctx.globalAlpha = layer / 3;
+                            ctx.beginPath();
+                            for (let i = 0; i < 12; i++) {
+                                const angle = (Math.PI * 2 / 12) * i + frame * 0.01 * layer;
+                                const x = Math.cos(angle) * (this.size / 2) * (layer / 3);
+                                const y = Math.sin(angle) * (this.size / 2) * (layer / 3);
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            }
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                        ctx.globalAlpha = 1;
+                        break;
+                }
+                
+                // Core
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Phase indicator rings
+                for (let i = 1; i <= this.phase; i++) {
+                    ctx.strokeStyle = this.phase >= 3 ? '#ff0000' : this.phase >= 2 ? '#ffff00' : '#00ffff';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 20 + i * 8 + Math.sin(frame * 0.1) * 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        function createParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 30,
+                    color: color,
+                    size: Math.random() * 3 + 2
+                });
+            }
+        }
+        
+        function spawnEnemy() {
+            // 4x more enemies - spawn every 22 frames instead of 90
+            if (frame % 22 === 0 && enemies.length < 32) {
+                const enemyTypes = ['scout', 'heavy', 'sniper', 'bomber', 'assault'];
+                
+                // Difficulty increases with stage
+                let typeWeights = [40, 20, 20, 10, 10]; // Stage 1 weights
+                
+                if (stage >= 2) typeWeights = [30, 25, 20, 15, 10];
+                if (stage >= 3) typeWeights = [20, 25, 25, 15, 15];
+                if (stage >= 4) typeWeights = [15, 20, 25, 20, 20];
+                if (stage >= 5) typeWeights = [10, 20, 20, 25, 25];
+                
+                // Weighted random selection
+                const totalWeight = typeWeights.reduce((a, b) => a + b, 0);
+                let random = Math.random() * totalWeight;
+                let selectedType = 'scout';
+                
+                for (let i = 0; i < enemyTypes.length; i++) {
+                    random -= typeWeights[i];
+                    if (random <= 0) {
+                        selectedType = enemyTypes[i];
+                        break;
+                    }
+                }
+                
+                enemies.push(new Enemy(
+                    Math.random() * (canvas.width - 80) + 40,
+                    -30,
+                    selectedType
+                ));
+            }
+        }
+        
+        function shootWeapon() {
+            const baseY = player.y - 15;
+            
+            switch(player.weaponLevel) {
+                case 1: // VULCAN - Single rapid fire (Cyan)
+                    player.bullets.push({
+                        x: player.x,
+                        y: baseY,
+                        vx: 0,
+                        vy: -8,
+                        damage: 1,
+                        type: 'vulcan',
+                        color: '#00ffff',
+                        size: 3
+                    });
+                    break;
+                    
+                case 2: // SPREAD - Double shot (Green + Yellow)
+                    player.bullets.push({
+                        x: player.x - 8,
+                        y: baseY,
+                        vx: -0.2,
+                        vy: -8,
+                        damage: 1,
+                        type: 'spread',
+                        color: '#00ff00',
+                        size: 4
+                    });
+                    player.bullets.push({
+                        x: player.x + 8,
+                        y: baseY,
+                        vx: 0.2,
+                        vy: -8,
+                        damage: 1,
+                        type: 'spread',
+                        color: '#ffff00',
+                        size: 4
+                    });
+                    break;
+                    
+                case 3: // LASER - Powerful beam (Purple + Pink)
+                    player.bullets.push({
+                        x: player.x,
+                        y: baseY,
+                        vx: 0,
+                        vy: -10,
+                        damage: 2,
+                        type: 'laser',
+                        color: '#ff00ff',
+                        size: 6,
+                        trail: []
+                    });
+                    player.bullets.push({
+                        x: player.x - 12,
+                        y: baseY,
+                        vx: -0.3,
+                        vy: -8,
+                        damage: 1,
+                        type: 'plasma',
+                        color: '#ff0088',
+                        size: 4
+                    });
+                    player.bullets.push({
+                        x: player.x + 12,
+                        y: baseY,
+                        vx: 0.3,
+                        vy: -8,
+                        damage: 1,
+                        type: 'plasma',
+                        color: '#ff0088',
+                        size: 4
+                    });
+                    break;
+                    
+                case 4: // WAVE - Undulating energy (Orange + Blue) - REDUCED SPREAD
+                    for (let i = -2; i <= 2; i++) {
+                        player.bullets.push({
+                            x: player.x,
+                            y: baseY,
+                            vx: i * 0.5, // Reduced from 1.2
+                            vy: -8,
+                            damage: 1,
+                            type: 'wave',
+                            color: i === 0 ? '#ff6600' : '#00aaff',
+                            size: i === 0 ? 5 : 4,
+                            waveOffset: i * 0.5
+                        });
+                    }
+                    break;
+                    
+                case 5: // APOCALYPSE - Rainbow destruction - REDUCED SPREAD
+                    const colors = ['#ff0000', '#ff6600', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff'];
+                    for (let i = -3; i <= 3; i++) {
+                        player.bullets.push({
+                            x: player.x,
+                            y: baseY,
+                            vx: i * 0.7, // Reduced from 1.5
+                            vy: -9,
+                            damage: 2,
+                            type: 'rainbow',
+                            color: colors[i + 3],
+                            size: 6,
+                            rainbow: true
+                        });
+                    }
+                    // Central mega laser
+                    player.bullets.push({
+                        x: player.x,
+                        y: baseY - 5,
+                        vx: 0,
+                        vy: -12,
+                        damage: 5,
+                        type: 'megalaser',
+                        color: '#ffffff',
+                        size: 10,
+                        glow: true
+                    });
+                    break;
+            }
+        }
+        
+        function spawnBoss() {
+            // Boss appears after 30 seconds (1800 frames) and all enemies are cleared
+            if (enemies.length === 0 && bosses.length === 0 && frame > 1800 && stage <= 5) {
+                bosses.push(new Boss(stage));
+            }
+        }
+        
+        function updatePlayer() {
+            if (keys['ArrowLeft'] && player.x > 20) player.x -= player.speed;
+            if (keys['ArrowRight'] && player.x < canvas.width - 20) player.x += player.speed;
+            if (keys['ArrowUp'] && player.y > 20) player.y -= player.speed;
+            if (keys['ArrowDown'] && player.y < canvas.height - 20) player.y += player.speed;
+            
+            player.fireTimer++;
+            if (keys[' '] && player.fireTimer >= player.fireRate) {
+                shootWeapon();
+                player.fireTimer = 0;
+            }
+        }
+        
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            
+            // Engine exhaust animation
+            const enginePulse = Math.sin(frame * 0.3) * 0.3 + 0.7;
+            
+            // === REAR ENGINES ===
+            // Left engine exhaust
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = '#ff6600';
+            const gradient1 = ctx.createLinearGradient(0, 12, 0, 22);
+            gradient1.addColorStop(0, '#ffff00');
+            gradient1.addColorStop(0.5, '#ff6600');
+            gradient1.addColorStop(1, '#ff0000');
+            ctx.fillStyle = gradient1;
+            ctx.globalAlpha = enginePulse;
+            ctx.beginPath();
+            ctx.moveTo(-10, 12);
+            ctx.lineTo(-8, 18 + enginePulse * 4);
+            ctx.lineTo(-6, 12);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Right engine exhaust
+            ctx.beginPath();
+            ctx.moveTo(10, 12);
+            ctx.lineTo(8, 18 + enginePulse * 4);
+            ctx.lineTo(6, 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // Center engine exhaust
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = '#00ffff';
+            const gradient2 = ctx.createLinearGradient(0, 14, 0, 24);
+            gradient2.addColorStop(0, '#00ffff');
+            gradient2.addColorStop(0.5, '#0088ff');
+            gradient2.addColorStop(1, '#0044ff');
+            ctx.fillStyle = gradient2;
+            ctx.globalAlpha = enginePulse * 0.9;
+            ctx.beginPath();
+            ctx.moveTo(-3, 14);
+            ctx.lineTo(0, 22 + enginePulse * 5);
+            ctx.lineTo(3, 14);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+            
+            // === WINGS ===
+            // Left wing
+            ctx.fillStyle = '#1a4d6d';
+            ctx.beginPath();
+            ctx.moveTo(-8, 0);
+            ctx.lineTo(-18, 8);
+            ctx.lineTo(-16, 12);
+            ctx.lineTo(-8, 10);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Left wing highlight
+            ctx.fillStyle = '#2d7aa0';
+            ctx.beginPath();
+            ctx.moveTo(-8, 0);
+            ctx.lineTo(-16, 6);
+            ctx.lineTo(-14, 8);
+            ctx.lineTo(-8, 5);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Left wing weapon pod
+            ctx.fillStyle = '#ff6600';
+            ctx.fillRect(-18, 9, 4, 5);
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillRect(-17, 10, 2, 3);
+            
+            // Right wing (mirror)
+            ctx.fillStyle = '#1a4d6d';
+            ctx.beginPath();
+            ctx.moveTo(8, 0);
+            ctx.lineTo(18, 8);
+            ctx.lineTo(16, 12);
+            ctx.lineTo(8, 10);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Right wing highlight
+            ctx.fillStyle = '#2d7aa0';
+            ctx.beginPath();
+            ctx.moveTo(8, 0);
+            ctx.lineTo(16, 6);
+            ctx.lineTo(14, 8);
+            ctx.lineTo(8, 5);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Right wing weapon pod
+            ctx.fillStyle = '#ff6600';
+            ctx.fillRect(14, 9, 4, 5);
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillRect(15, 10, 2, 3);
+            
+            // === MAIN BODY ===
+            // Body shadow/depth
+            ctx.fillStyle = '#003d5c';
+            ctx.beginPath();
+            ctx.moveTo(-7, 14);
+            ctx.lineTo(-9, 0);
+            ctx.lineTo(-5, -12);
+            ctx.lineTo(0, -16);
+            ctx.lineTo(5, -12);
+            ctx.lineTo(9, 0);
+            ctx.lineTo(7, 14);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Main body
+            const bodyGradient = ctx.createLinearGradient(-8, -16, 8, 14);
+            bodyGradient.addColorStop(0, '#00d4ff');
+            bodyGradient.addColorStop(0.5, '#0088cc');
+            bodyGradient.addColorStop(1, '#005577');
+            ctx.fillStyle = bodyGradient;
+            ctx.beginPath();
+            ctx.moveTo(-6, 14);
+            ctx.lineTo(-8, 0);
+            ctx.lineTo(-4, -12);
+            ctx.lineTo(0, -16);
+            ctx.lineTo(4, -12);
+            ctx.lineTo(8, 0);
+            ctx.lineTo(6, 14);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Body panel lines
+            ctx.strokeStyle = '#003d5c';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-4, -8);
+            ctx.lineTo(-6, 8);
+            ctx.moveTo(4, -8);
+            ctx.lineTo(6, 8);
+            ctx.stroke();
+            
+            // === COCKPIT ===
+            // Cockpit glass
+            const cockpitGradient = ctx.createRadialGradient(0, -8, 0, 0, -8, 6);
+            cockpitGradient.addColorStop(0, '#88ffff');
+            cockpitGradient.addColorStop(0.6, '#0088ff');
+            cockpitGradient.addColorStop(1, '#003366');
+            ctx.fillStyle = cockpitGradient;
+            ctx.beginPath();
+            ctx.arc(0, -8, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cockpit highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(-1.5, -9.5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // === NOSE CONE ===
+            ctx.fillStyle = '#ff6600';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff6600';
+            ctx.beginPath();
+            ctx.moveTo(-2, -14);
+            ctx.lineTo(0, -18);
+            ctx.lineTo(2, -14);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Nose tip
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(0, -17, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // === SIDE DETAILS ===
+            // Left side accent
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00ffff';
+            ctx.beginPath();
+            ctx.moveTo(-5, -10);
+            ctx.lineTo(-7, -5);
+            ctx.lineTo(-6, 2);
+            ctx.stroke();
+            
+            // Right side accent
+            ctx.beginPath();
+            ctx.moveTo(5, -10);
+            ctx.lineTo(7, -5);
+            ctx.lineTo(6, 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // === ENGINE INTAKES ===
+            // Left intake
+            ctx.fillStyle = '#001f33';
+            ctx.beginPath();
+            ctx.arc(-8, 10, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#003d5c';
+            ctx.beginPath();
+            ctx.arc(-8, 10, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Right intake
+            ctx.fillStyle = '#001f33';
+            ctx.beginPath();
+            ctx.arc(8, 10, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#003d5c';
+            ctx.beginPath();
+            ctx.arc(8, 10, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // === WEAPON HARDPOINTS ===
+            // Small red lights on wings
+            ctx.fillStyle = '#ff0000';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(-15, 10, 1.5, 0, Math.PI * 2);
+            ctx.arc(15, 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // === HITBOX (for visual reference) ===
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+            ctx.beginPath();
+            ctx.arc(0, 0, player.hitboxRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function updateBullets() {
+            // Player bullets
+            player.bullets = player.bullets.filter(bullet => {
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+                
+                // Check enemy collisions
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    const dist = Math.hypot(bullet.x - enemy.x, bullet.y - enemy.y);
+                    if (dist < 20) {
+                        enemy.health -= bullet.damage;
+                        createParticles(enemy.x, enemy.y, '#00ff88', 5);
+                        if (enemy.health <= 0) {
+                            createParticles(enemy.x, enemy.y, '#ffff00', 15);
+                            score += enemy.points;
+                            
+                            // Drop power-ups
+                            if (Math.random() > 0.6) {
+                                powerups.push({
+                                    x: enemy.x, 
+                                    y: enemy.y, 
+                                    type: 'weapon',
+                                    vy: 2
+                                });
+                            }
+                            enemies.splice(i, 1);
+                        }
+                        return false;
+                    }
+                }
+                
+                // Check boss collisions
+                for (let boss of bosses) {
+                    const dist = Math.hypot(bullet.x - boss.x, bullet.y - boss.y);
+                    if (dist < 40) {
+                        boss.health -= bullet.damage;
+                        createParticles(boss.x, boss.y, '#ff00ff', 3);
+                        if (boss.health <= 0) {
+                            createParticles(boss.x, boss.y, '#ffff00', 30);
+                            score += 5000 * boss.level;
+                            bosses = [];
+                            
+                            // Check for victory
+                            if (stage === 5) {
+                                // Victory!
+                                gameState = 'victory';
+                                if (score > hiScore) {
+                                    hiScore = score;
+                                    localStorage.setItem('hiScore', hiScore);
+                                }
+                                document.getElementById('victoryScore').textContent = score;
+                                document.getElementById('victory').classList.remove('hidden');
+                            } else {
+                                // Advance to next stage
+                                stage++;
+                                frame = 0;
+                                initLevelBackground(); // Initialize new level background
+                            }
+                        }
+                        return false;
+                    }
+                }
+                
+                // Check destructible building collisions (Level 3)
+                if (stage === 3) {
+                    for (let i = destructibles.length - 1; i >= 0; i--) {
+                        const building = destructibles[i];
+                        if (bullet.x > building.x && bullet.x < building.x + building.width &&
+                            bullet.y > building.y && bullet.y < building.y + building.height) {
+                            building.health -= bullet.damage;
+                            createParticles(bullet.x, bullet.y, '#808080', 8);
+                            if (building.health <= 0) {
+                                createParticles(building.x + building.width/2, building.y + building.height/2, '#ff6600', 20);
+                                score += building.points;
+                            }
+                            return false;
+                        }
+                    }
+                }
+                
+                return bullet.y > 0 && bullet.x > -10 && bullet.x < canvas.width + 10;
+            });
+            
+            // Enemy bullets
+            enemyBullets = enemyBullets.filter(bullet => {
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+                
+                // Check player collision
+                const dist = Math.hypot(bullet.x - player.x, bullet.y - player.y);
+                if (dist < player.hitboxRadius + bullet.radius) {
+                    if (!godMode) {
+                        lives--;
+                        createParticles(player.x, player.y, '#ff0055', 20);
+                        if (lives <= 0) {
+                            gameOver();
+                        } else {
+                            // Respawn invincibility
+                            player.y = canvas.height - 80;
+                        }
+                    } else {
+                        // God mode - just show particles, no damage
+                        createParticles(player.x, player.y, '#00ffff', 10);
+                    }
+                    return false;
+                }
+                
+                return bullet.x > 0 && bullet.x < canvas.width && 
+                       bullet.y > 0 && bullet.y < canvas.height;
+            });
+        }
+        
+        function drawBullets() {
+            // Player bullets - different styles per weapon type
+            for (let bullet of player.bullets) {
+                ctx.save();
+                
+                switch(bullet.type) {
+                    case 'vulcan':
+                        // Simple cyan bullets
+                        ctx.fillStyle = bullet.color;
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = bullet.color;
+                        ctx.fillRect(bullet.x - 2, bullet.y - 6, 4, 12);
+                        break;
+                        
+                    case 'spread':
+                        // Glowing orbs
+                        ctx.fillStyle = bullet.color;
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = bullet.color;
+                        ctx.beginPath();
+                        ctx.arc(bullet.x, bullet.y, bullet.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                        
+                    case 'laser':
+                    case 'megalaser':
+                        // Elongated laser beam
+                        const length = bullet.type === 'megalaser' ? 25 : 15;
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = bullet.color;
+                        
+                        // Outer glow
+                        ctx.fillStyle = bullet.color;
+                        ctx.globalAlpha = 0.5;
+                        ctx.fillRect(bullet.x - bullet.size/2, bullet.y - length, bullet.size, length);
+                        
+                        // Inner core
+                        ctx.globalAlpha = 1;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(bullet.x - bullet.size/4, bullet.y - length, bullet.size/2, length);
+                        break;
+                        
+                    case 'plasma':
+                        // Pulsing plasma balls
+                        const pulse = Math.sin(frame * 0.2) * 1 + bullet.size;
+                        ctx.fillStyle = bullet.color;
+                        ctx.shadowBlur = 18;
+                        ctx.shadowColor = bullet.color;
+                        ctx.beginPath();
+                        ctx.arc(bullet.x, bullet.y, pulse, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                        
+                    case 'wave':
+                        // Undulating wave bullets
+                        if (!bullet.waveY) bullet.waveY = 0;
+                        bullet.waveY += 0.2;
+                        const waveX = Math.sin(bullet.waveY + bullet.waveOffset) * 3;
+                        
+                        ctx.fillStyle = bullet.color;
+                        ctx.shadowBlur = 12;
+                        ctx.shadowColor = bullet.color;
+                        
+                        // Draw wave trail
+                        ctx.beginPath();
+                        ctx.arc(bullet.x + waveX, bullet.y, bullet.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Update position for wave effect
+                        bullet.x += waveX * 0.1;
+                        break;
+                        
+                    case 'rainbow':
+                        // Rainbow particles with trails
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = bullet.color;
+                        
+                        // Trail effect
+                        ctx.globalAlpha = 0.3;
+                        for (let i = 1; i <= 3; i++) {
+                            ctx.beginPath();
+                            ctx.arc(bullet.x, bullet.y + i * 4, bullet.size - i, 0, Math.PI * 2);
+                            ctx.fillStyle = bullet.color;
+                            ctx.fill();
+                        }
+                        
+                        // Main bullet
+                        ctx.globalAlpha = 1;
+                        ctx.beginPath();
+                        ctx.arc(bullet.x, bullet.y, bullet.size, 0, Math.PI * 2);
+                        ctx.fillStyle = bullet.color;
+                        ctx.fill();
+                        
+                        // White core
+                        ctx.beginPath();
+                        ctx.arc(bullet.x, bullet.y, bullet.size/2, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fill();
+                        break;
+                }
+                
+                ctx.restore();
+            }
+            
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+            
+            // Enemy bullets
+            for (let bullet of enemyBullets) {
+                ctx.fillStyle = bullet.color;
+                ctx.shadowColor = bullet.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+        }
+        
+        function updateParticles() {
+            particles = particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                return p.life > 0;
+            });
+        }
+        
+        function updatePowerups() {
+            powerups = powerups.filter(p => {
+                p.y += p.vy;
+                
+                // Check player collision
+                const dist = Math.hypot(p.x - player.x, p.y - player.y);
+                if (dist < 25) {
+                    if (p.type === 'weapon' && player.weaponLevel < player.maxWeaponLevel) {
+                        player.weaponLevel++;
+                        createParticles(p.x, p.y, '#ffff00', 20);
+                        score += 500;
+                    }
+                    return false;
+                }
+                
+                return p.y < canvas.height + 20;
+            });
+        }
+        
+        function drawParticles() {
+            for (let p of particles) {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / 30;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawPowerups() {
+            for (let p of powerups) {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                
+                // Pulsing glow
+                const pulse = Math.sin(frame * 0.1) * 0.3 + 0.7;
+                ctx.shadowBlur = 20 * pulse;
+                ctx.shadowColor = '#ffff00';
+                
+                // Outer ring
+                ctx.strokeStyle = '#ffff00';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, 12, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Inner core
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(0, 0, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // "P" letter for Power
+                ctx.fillStyle = '#ff6600';
+                ctx.font = 'bold 10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('P', 0, 0);
+                
+                ctx.restore();
+            }
+        }
+        
+        function drawBackground() {
+            // Clear canvas first
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Base background gradient per level
+            let gradient;
+            switch(stage) {
+                case 1: // Espacio - Negro profundo con estrellas
+                    gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#000014');
+                    gradient.addColorStop(1, '#000000');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    break;
+                case 2: // Atmósfera - Azul cielo degradado
+                    gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#87CEEB');
+                    gradient.addColorStop(1, '#4682B4');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    break;
+                case 3: // Tierra - Verde/Marrón
+                    gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#87CEEB');
+                    gradient.addColorStop(0.3, '#90EE90');
+                    gradient.addColorStop(1, '#228B22');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    break;
+                case 4: // Océano - Azul profundo
+                    gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#4682B4');
+                    gradient.addColorStop(1, '#000080');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    break;
+                case 5: // Infierno - Rojo/Naranja ardiente
+                    gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#8B0000');
+                    gradient.addColorStop(0.5, '#FF4500');
+                    gradient.addColorStop(1, '#000000');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    break;
+            }
+            
+            // Draw level-specific elements
+            if (stage === 1) {
+                // ESPACIO - Solo estrellas
+                for (let star of stars) {
+                    star.y += star.speed;
+                    if (star.y > canvas.height) {
+                        star.y = 0;
+                        star.x = Math.random() * canvas.width;
+                    }
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+                    ctx.fillRect(star.x, star.y, 2, 2);
+                }
+            }
+            
+            if (stage === 2) {
+                // NUBES
+                for (let element of backgroundElements) {
+                    if (element.type === 'cloud') {
+                        element.y += element.speed;
+                        if (element.y > canvas.height + element.size) {
+                            element.y = -element.size;
+                            element.x = Math.random() * canvas.width;
+                        }
+                        
+                        ctx.save();
+                        ctx.globalAlpha = element.opacity;
+                        ctx.fillStyle = '#ffffff';
+                        
+                        // Cloud shape
+                        ctx.beginPath();
+                        ctx.arc(element.x, element.y, element.size * 0.4, 0, Math.PI * 2);
+                        ctx.arc(element.x + element.size * 0.3, element.y, element.size * 0.35, 0, Math.PI * 2);
+                        ctx.arc(element.x - element.size * 0.3, element.y, element.size * 0.35, 0, Math.PI * 2);
+                        ctx.arc(element.x, element.y - element.size * 0.2, element.size * 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+            }
+            
+            if (stage === 3) {
+                // SUPERFICIE - Vista superior del terreno
+                for (let element of backgroundElements) {
+                    element.y += element.speed;
+                    if (element.y > canvas.height + element.size) {
+                        element.y = -element.size;
+                        element.x = Math.random() * canvas.width;
+                    }
+                    
+                    if (element.type === 'grassPatch') {
+                        // Parches de pasto de diferentes tonos
+                        ctx.save();
+                        ctx.globalAlpha = 0.4;
+                        ctx.fillStyle = element.shade === 'dark' ? '#2d5016' : '#3a6e1f';
+                        ctx.beginPath();
+                        ctx.arc(element.x, element.y, element.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    
+                    if (element.type === 'treeTopDown') {
+                        // Árboles vistos desde arriba (copa circular)
+                        ctx.save();
+                        
+                        // Sombra del árbol
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                        ctx.beginPath();
+                        ctx.ellipse(element.x + 3, element.y + 3, element.size * 0.5, element.size * 0.3, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Copa del árbol - verde oscuro exterior
+                        const greenShade = Math.floor(180 + element.shadeVariation * 60);
+                        ctx.fillStyle = `rgb(34, ${greenShade}, 34)`;
+                        ctx.beginPath();
+                        ctx.arc(element.x, element.y, element.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Detalle interior - verde más claro
+                        ctx.fillStyle = `rgba(${60 + element.shadeVariation * 40}, ${200 + element.shadeVariation * 55}, 60, 0.7)`;
+                        ctx.beginPath();
+                        ctx.arc(element.x - element.size * 0.2, element.y - element.size * 0.2, element.size * 0.6, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Highlight pequeño
+                        ctx.fillStyle = 'rgba(150, 255, 150, 0.3)';
+                        ctx.beginPath();
+                        ctx.arc(element.x - element.size * 0.3, element.y - element.size * 0.3, element.size * 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.restore();
+                    }
+                    
+                    if (element.type === 'rock') {
+                        // Rocas grises irregulares
+                        ctx.save();
+                        ctx.translate(element.x, element.y);
+                        ctx.rotate(element.rotation);
+                        
+                        ctx.fillStyle = '#6b6b6b';
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (Math.PI * 2 / 6) * i;
+                            const radius = element.size * (0.7 + Math.random() * 0.3);
+                            const x = Math.cos(angle) * radius;
+                            const y = Math.sin(angle) * radius;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        // Highlight en la roca
+                        ctx.fillStyle = 'rgba(150, 150, 150, 0.5)';
+                        ctx.beginPath();
+                        ctx.arc(-element.size * 0.2, -element.size * 0.2, element.size * 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.restore();
+                    }
+                    
+                    if (element.type === 'flower') {
+                        // Flores/arbustos pequeños
+                        ctx.save();
+                        ctx.fillStyle = element.color;
+                        ctx.shadowBlur = 5;
+                        ctx.shadowColor = element.color;
+                        ctx.beginPath();
+                        ctx.arc(element.x, element.y, element.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Centro blanco/amarillo
+                        ctx.fillStyle = '#ffffcc';
+                        ctx.beginPath();
+                        ctx.arc(element.x, element.y, element.size * 0.4, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+                
+                // Estructuras destructibles (vista superior - edificios como cuadrados)
+                for (let building of destructibles) {
+                    building.y += building.speed;
+                    
+                    if (building.health > 0) {
+                        ctx.save();
+                        
+                        // Sombra del edificio
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                        ctx.fillRect(building.x + 5, building.y + 5, building.width, building.height);
+                        
+                        // Cuerpo del edificio
+                        ctx.fillStyle = building.health === 3 ? '#8b7355' : building.health === 2 ? '#a68a6d' : '#c4a582';
+                        ctx.fillRect(building.x, building.y, building.width, building.height);
+                        
+                        // Techo (vista superior)
+                        ctx.fillStyle = building.health === 3 ? '#654321' : '#8b6914';
+                        ctx.fillRect(building.x + 5, building.y + 5, building.width - 10, building.height - 10);
+                        
+                        // Detalles del techo
+                        ctx.strokeStyle = building.health === 3 ? '#4a3012' : '#6b5013';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(building.x + 5, building.y + building.height / 2);
+                        ctx.lineTo(building.x + building.width - 5, building.y + building.height / 2);
+                        ctx.stroke();
+                        
+                        // Grietas de daño
+                        if (building.health < 3) {
+                            ctx.strokeStyle = '#ff0000';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.moveTo(building.x, building.y);
+                            ctx.lineTo(building.x + building.width, building.y + building.height);
+                            ctx.stroke();
+                        }
+                        if (building.health === 1) {
+                            ctx.beginPath();
+                            ctx.moveTo(building.x + building.width, building.y);
+                            ctx.lineTo(building.x, building.y + building.height);
+                            ctx.stroke();
+                        }
+                        
+                        ctx.restore();
+                    }
+                }
+                
+                // Remove off-screen buildings
+                destructibles = destructibles.filter(b => b.y < canvas.height + 100 && b.health > 0);
+                
+                // Spawn new buildings
+                if (destructibles.length < 3 && Math.random() < 0.01) {
+                    destructibles.push({
+                        type: 'buildingTopDown',
+                        x: Math.random() * (canvas.width - 60) + 30,
+                        y: -100,
+                        speed: 2,
+                        width: 50,
+                        height: 50,
+                        health: 3,
+                        points: 500
+                    });
+                }
+            }
+            
+            if (stage === 4) {
+                // OCÉANO - Burbujas
+                for (let element of backgroundElements) {
+                    if (element.type === 'bubble') {
+                        element.y += element.speed;
+                        element.wobble += 0.05;
+                        const wobbleX = Math.sin(element.wobble) * 2;
+                        
+                        if (element.y > canvas.height + element.size) {
+                            element.y = -element.size;
+                            element.x = Math.random() * canvas.width;
+                        }
+                        
+                        ctx.save();
+                        ctx.globalAlpha = 0.4;
+                        ctx.strokeStyle = '#87ceeb';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(element.x + wobbleX, element.y, element.size, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // Highlight
+                        ctx.fillStyle = '#ffffff';
+                        ctx.globalAlpha = 0.6;
+                        ctx.beginPath();
+                        ctx.arc(element.x + wobbleX - element.size * 0.3, element.y - element.size * 0.3, element.size * 0.2, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    
+                    if (element.type === 'fish') {
+                        element.y += element.speed;
+                        element.x += element.direction * 0.5;
+                        
+                        if (element.y > canvas.height + element.size) {
+                            element.y = -element.size;
+                            element.x = Math.random() * canvas.width;
+                        }
+                        if (element.x < -element.size || element.x > canvas.width + element.size) {
+                            element.direction *= -1;
+                        }
+                        
+                        ctx.save();
+                        ctx.globalAlpha = 0.5;
+                        ctx.fillStyle = '#4169e1';
+                        
+                        // Fish body
+                        ctx.beginPath();
+                        ctx.ellipse(element.x, element.y, element.size * 0.6, element.size * 0.3, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Tail
+                        ctx.beginPath();
+                        ctx.moveTo(element.x - element.size * 0.6, element.y);
+                        ctx.lineTo(element.x - element.size, element.y - element.size * 0.2);
+                        ctx.lineTo(element.x - element.size, element.y + element.size * 0.2);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+            }
+            
+            if (stage === 5) {
+                // INFIERNO - Llamas
+                for (let element of backgroundElements) {
+                    if (element.type === 'flame') {
+                        element.y += element.speed;
+                        if (element.y > canvas.height + element.size) {
+                            element.y = -element.size;
+                            element.x = Math.random() * canvas.width;
+                        }
+                        
+                        ctx.save();
+                        const flicker = Math.sin(frame * 0.1 + element.intensity * 10) * 0.3 + 0.7;
+                        ctx.globalAlpha = flicker * 0.6;
+                        
+                        // Flame gradient
+                        const gradient = ctx.createRadialGradient(element.x, element.y, 0, element.x, element.y, element.size);
+                        gradient.addColorStop(0, '#ffff00');
+                        gradient.addColorStop(0.5, '#ff6600');
+                        gradient.addColorStop(1, '#ff0000');
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = '#ff6600';
+                        
+                        // Flame shape
+                        ctx.beginPath();
+                        ctx.moveTo(element.x, element.y + element.size);
+                        ctx.quadraticCurveTo(element.x - element.size * 0.5, element.y, element.x, element.y - element.size);
+                        ctx.quadraticCurveTo(element.x + element.size * 0.5, element.y, element.x, element.y + element.size);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    
+                    if (element.type === 'lavaRock') {
+                        element.y += element.speed;
+                        element.rotation += 0.02;
+                        
+                        if (element.y > canvas.height + element.size) {
+                            element.y = -element.size;
+                            element.x = Math.random() * canvas.width;
+                        }
+                        
+                        ctx.save();
+                        ctx.translate(element.x, element.y);
+                        ctx.rotate(element.rotation);
+                        
+                        // Rock
+                        ctx.fillStyle = '#3a3a3a';
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (Math.PI * 2 / 6) * i;
+                            const radius = element.size * (0.8 + Math.random() * 0.4);
+                            const x = Math.cos(angle) * radius;
+                            const y = Math.sin(angle) * radius;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        // Lava cracks
+                        ctx.strokeStyle = '#ff4500';
+                        ctx.lineWidth = 2;
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = '#ff4500';
+                        ctx.beginPath();
+                        ctx.moveTo(-element.size * 0.3, 0);
+                        ctx.lineTo(element.size * 0.3, 0);
+                        ctx.moveTo(0, -element.size * 0.3);
+                        ctx.lineTo(0, element.size * 0.3);
+                        ctx.stroke();
+                        
+                        ctx.restore();
+                    }
+                }
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('hiScore').textContent = hiScore;
+            document.getElementById('lives').textContent = lives;
+            
+            // Level names
+            const levelNames = [
+                '1: ESPACIO',
+                '2: ATMÓSFERA',
+                '3: SUPERFICIE',
+                '4: OCÉANO',
+                '5: INFIERNO'
+            ];
+            document.getElementById('stage').textContent = levelNames[stage - 1];
+            
+            // Descriptive weapon names
+            const weaponNames = [
+                'VULCAN',
+                'SPREAD',
+                'LASER',
+                'WAVE',
+                'APOCALYPSE'
+            ];
+            document.getElementById('weapon').textContent = weaponNames[player.weaponLevel - 1];
+        }
+        
+        function gameOver() {
+            gameState = 'over';
+            if (score > hiScore) {
+                hiScore = score;
+                localStorage.setItem('hiScore', hiScore);
+            }
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').classList.remove('hidden');
+        }
+        
+        function startGame() {
+            gameState = 'playing';
+            document.getElementById('startScreen').classList.add('hidden');
+            resetGame();
+            gameLoop();
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOver').classList.add('hidden');
+            document.getElementById('victory').classList.add('hidden');
+            resetGame();
+            gameState = 'playing';
+        }
+        
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            stage = 1;
+            frame = 0;
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 80;
+            player.weaponLevel = 1;
+            enemies = [];
+            bosses = [];
+            enemyBullets = [];
+            particles = [];
+            powerups = [];
+            player.bullets = [];
+            initLevelBackground(); // Initialize level 1 background
+        }
+        
+        function togglePause() {
+            paused = !paused;
+            const pauseScreen = document.getElementById('pauseScreen');
+            if (paused) {
+                pauseScreen.classList.remove('hidden');
+            } else {
+                pauseScreen.classList.add('hidden');
+            }
+        }
+        
+        function gameLoop() {
+            // Always continue the loop
+            requestAnimationFrame(gameLoop);
+            
+            if (gameState !== 'playing' || paused) return;
+            
+            frame++;
+            
+            // Clear with level-specific color (handled in drawBackground)
+            // Draw background
+            drawBackground();
+            
+            // Update
+            updatePlayer();
+            spawnEnemy();
+            spawnBoss();
+            
+            for (let enemy of enemies) {
+                enemy.update();
+            }
+            
+            for (let boss of bosses) {
+                boss.update();
+            }
+            
+            updateBullets();
+            updateParticles();
+            updatePowerups();
+            
+            // Remove off-screen enemies
+            enemies = enemies.filter(e => e.y < canvas.height + 50);
+            
+            // Draw
+            for (let enemy of enemies) {
+                enemy.draw();
+            }
+            
+            for (let boss of bosses) {
+                boss.draw();
+            }
+            
+            drawBullets();
+            drawParticles();
+            drawPowerups();
+            drawPlayer();
+            
+            // Update UI
+            updateUI();
+        }
+        
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ') e.preventDefault();
+            
+            // Toggle God Mode with 'G' key
+            if (e.key === 'g' || e.key === 'G') {
+                godMode = !godMode;
+                const indicator = document.getElementById('godModeIndicator');
+                if (godMode) {
+                    indicator.classList.remove('hidden');
+                } else {
+                    indicator.classList.add('hidden');
+                }
+                console.log('God Mode:', godMode ? 'ACTIVADO ⚡' : 'DESACTIVADO');
+            }
+            
+            // Toggle Pause with 'P' or 'Escape' key
+            if ((e.key === 'p' || e.key === 'P' || e.key === 'Escape') && gameState === 'playing') {
+                togglePause();
+            }
+            
+            // Level skip with number keys 1-5
+            if (gameState === 'playing' && !paused) {
+                if (e.key >= '1' && e.key <= '5') {
+                    const newStage = parseInt(e.key);
+                    if (newStage !== stage) {
+                        stage = newStage;
+                        frame = 0;
+                        enemies = [];
+                        bosses = [];
+                        enemyBullets = [];
+                        initLevelBackground();
+                        console.log('Saltado a nivel:', stage);
+                    }
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
