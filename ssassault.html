@@ -1980,49 +1980,105 @@
                 // SUPERFICIE - La imagen de fondo ya tiene vegetación
                 // Solo mantenemos los edificios destructibles como elementos de gameplay
 
-                // Estructuras destructibles (vista superior - edificios como cuadrados)
+                // Torretas de defensa terrestre (vista superior)
                 for (let building of destructibles) {
                     building.y += building.speed;
-                    
+
                     if (building.health > 0) {
                         ctx.save();
-                        
-                        // Sombra del edificio
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-                        ctx.fillRect(building.x + 5, building.y + 5, building.width, building.height);
-                        
-                        // Cuerpo del edificio
-                        ctx.fillStyle = building.health === 3 ? '#8b7355' : building.health === 2 ? '#a68a6d' : '#c4a582';
-                        ctx.fillRect(building.x, building.y, building.width, building.height);
-                        
-                        // Techo (vista superior)
-                        ctx.fillStyle = building.health === 3 ? '#654321' : '#8b6914';
-                        ctx.fillRect(building.x + 5, building.y + 5, building.width - 10, building.height - 10);
-                        
-                        // Detalles del techo
-                        ctx.strokeStyle = building.health === 3 ? '#4a3012' : '#6b5013';
-                        ctx.lineWidth = 2;
+                        const cx = building.x + building.width / 2;
+                        const cy = building.y + building.height / 2;
+                        const size = building.width / 2;
+
+                        // Color basado en daño
+                        const baseColor = building.health === 3 ? '#4a5d4a' : building.health === 2 ? '#5d6b5d' : '#7a8a7a';
+                        const darkColor = building.health === 3 ? '#2d3d2d' : building.health === 2 ? '#3d4d3d' : '#4d5d4d';
+                        const metalColor = building.health === 3 ? '#6b7b6b' : '#8b9b8b';
+
+                        // Sombra
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
                         ctx.beginPath();
-                        ctx.moveTo(building.x + 5, building.y + building.height / 2);
-                        ctx.lineTo(building.x + building.width - 5, building.y + building.height / 2);
-                        ctx.stroke();
-                        
-                        // Grietas de daño
+                        ctx.arc(cx + 4, cy + 4, size, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Base octogonal de la torreta
+                        ctx.fillStyle = darkColor;
+                        ctx.beginPath();
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (Math.PI * 2 / 8) * i - Math.PI / 8;
+                            const x = cx + Math.cos(angle) * size;
+                            const y = cy + Math.sin(angle) * size;
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+
+                        // Cuerpo central circular
+                        ctx.fillStyle = baseColor;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, size * 0.7, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Cañón doble apuntando hacia arriba (hacia el jugador)
+                        ctx.fillStyle = metalColor;
+                        ctx.fillRect(cx - 8, cy - size * 1.2, 6, size * 0.9);
+                        ctx.fillRect(cx + 2, cy - size * 1.2, 6, size * 0.9);
+
+                        // Detalle oscuro del cañón
+                        ctx.fillStyle = '#1a1a1a';
+                        ctx.fillRect(cx - 7, cy - size * 1.2, 4, 6);
+                        ctx.fillRect(cx + 3, cy - size * 1.2, 4, 6);
+
+                        // Cúpula central
+                        ctx.fillStyle = metalColor;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, size * 0.35, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Highlight de la cúpula
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.beginPath();
+                        ctx.arc(cx - size * 0.1, cy - size * 0.1, size * 0.15, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Luces de estado (rojo = activo)
+                        ctx.fillStyle = building.health === 3 ? '#ff0000' : building.health === 2 ? '#ff6600' : '#ffcc00';
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = ctx.fillStyle;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, size * 0.12, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+
+                        // Daño visual - chispas y grietas
                         if (building.health < 3) {
-                            ctx.strokeStyle = '#ff0000';
-                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = '#ff4400';
+                            ctx.lineWidth = 2;
                             ctx.beginPath();
-                            ctx.moveTo(building.x, building.y);
-                            ctx.lineTo(building.x + building.width, building.y + building.height);
+                            ctx.moveTo(cx - size * 0.5, cy - size * 0.3);
+                            ctx.lineTo(cx + size * 0.3, cy + size * 0.5);
                             ctx.stroke();
+
+                            // Chispas
+                            ctx.fillStyle = '#ffff00';
+                            ctx.shadowBlur = 5;
+                            ctx.shadowColor = '#ff6600';
+                            for (let i = 0; i < 3; i++) {
+                                const sparkX = cx + (Math.random() - 0.5) * size;
+                                const sparkY = cy + (Math.random() - 0.5) * size;
+                                ctx.fillRect(sparkX, sparkY, 2, 2);
+                            }
+                            ctx.shadowBlur = 0;
                         }
                         if (building.health === 1) {
+                            // Humo
+                            ctx.fillStyle = 'rgba(50, 50, 50, 0.5)';
                             ctx.beginPath();
-                            ctx.moveTo(building.x + building.width, building.y);
-                            ctx.lineTo(building.x, building.y + building.height);
-                            ctx.stroke();
+                            ctx.arc(cx + size * 0.3, cy - size * 0.2, size * 0.25, 0, Math.PI * 2);
+                            ctx.fill();
                         }
-                        
+
                         ctx.restore();
                     }
                 }
