@@ -142,7 +142,13 @@ HTML5 + CSS3 + Vanilla JavaScript
 ```
 SSAssault/
 ├── README.md
-├── ssassault.html              # Complete game (HTML + CSS + JS + embedded images)
+├── ssassault.html              # Production version (HTML + CSS + JS + embedded base64 images)
+├── ssassault_editable.html     # Development version (external image references for easier editing)
+├── levels/                     # Background images for development version
+│   ├── 02.jpg                  # Level 2: Jungle
+│   ├── 03.jpg                  # Level 3: Islands
+│   ├── 04.jpg                  # Level 4: Ocean
+│   └── 05.jpg                  # Level 5: Inferno
 └── screenshots/
     ├── 01.jpeg                 # Level 1: Space
     ├── 02.jpeg                 # Level 1: Bullet hell
@@ -151,6 +157,11 @@ SSAssault/
     ├── 05.png                  # Level 5: Inferno
     └── 06.png                  # Level 4: Ocean
 ```
+
+### File Versions
+
+- **ssassault.html**: Production-ready, self-contained file with all level background images embedded as base64. No external dependencies.
+- **ssassault_editable.html**: Development version that references external image files from the `levels/` folder. Easier to modify and test changes.
 
 The entire game is contained in a single HTML file featuring:
 - ~240 lines of CSS (cyberpunk styling, animations)

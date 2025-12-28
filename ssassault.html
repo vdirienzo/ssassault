@@ -1,15 +1,7 @@
 <!DOCTYPE html>
-<!--
-    SSAssault - Sistema Sistem Assault
-    A bullet hell arcade game
-
-    Author: Homero Thompson del Lago del Terror
-    License: MIT
--->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="author" content="Homero Thompson del Lago del Terror">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Sistem Assault</title>
     <style>
@@ -254,6 +246,9 @@
             <div id="godModeIndicator" class="hidden" style="color: #ff00ff; font-size: 16px; font-weight: 900; margin-top: 15px; text-shadow: 0 0 15px rgba(255, 0, 255, 1), 0 0 30px rgba(255, 0, 255, 0.6);">
                 ⚡ GOD MODE ⚡
             </div>
+            <div id="gamepadIndicator" class="hidden" style="color: #00ff00; font-size: 14px; font-weight: bold; margin-top: 10px; text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);">
+                🎮 GAMEPAD
+            </div>
         </div>
         
         <div id="startScreen">
@@ -263,7 +258,10 @@
                 <div>FLECHAS: Mover nave</div>
                 <div>ESPACIO: Disparar</div>
                 <div>P / ESC: Pausa</div>
-                <div>1-5: Saltar a nivel específico</div>
+                <div style="margin-top: 10px; color: #00ff00;">🎮 GAMEPAD BLUETOOTH/USB</div>
+                <div style="color: #00ff00;">Stick/D-Pad: Mover | A: Disparar | X: God Mode</div>
+                <div style="color: #00ff00;">RB/RT: Nivel ↑↓ | LB: Pausa | LT: Start</div>
+                <div style="margin-top: 10px;">1-5: Saltar a nivel específico</div>
                 <div>G: Activar/Desactivar God Mode (Testing)</div>
                 <div>¡Recoge power-ups (P) para mejorar tu arma!</div>
                 <div>¡Esquiva miles de proyectiles!</div>
@@ -345,6 +343,16 @@
         
         // Input
         const keys = {};
+
+        // Gamepad state
+        let gamepadConnected = false;
+        let gamepadIndex = null;
+        const DEADZONE = 0.15;
+        let pauseButtonPressed = false;
+        let godModeButtonPressed = false;
+        let levelUpButtonPressed = false;
+        let levelDownButtonPressed = false;
+        let startButtonPressed = false;
         
         // Background stars
         const stars = Array.from({length: 100}, () => ({
@@ -1314,12 +1322,89 @@
             }
         }
         
+        function readGamepad() {
+            if (!gamepadConnected) return null;
+            const gamepads = navigator.getGamepads();
+            return gamepads[gamepadIndex] || null;
+        }
+
         function updatePlayer() {
+            // === GAMEPAD INPUT ===
+            const gamepad = readGamepad();
+            if (gamepad) {
+                // Stick izquierdo - Movimiento
+                const axisX = gamepad.axes[0];
+                const axisY = gamepad.axes[1];
+
+                if (axisX < -DEADZONE && player.x > 20) player.x -= player.speed * Math.abs(axisX);
+                if (axisX > DEADZONE && player.x < canvas.width - 20) player.x += player.speed * axisX;
+                if (axisY < -DEADZONE && player.y > 20) player.y -= player.speed * Math.abs(axisY);
+                if (axisY > DEADZONE && player.y < canvas.height - 20) player.y += player.speed * axisY;
+
+                // D-Pad - Movimiento alternativo
+                if (gamepad.buttons[14]?.pressed && player.x > 20) player.x -= player.speed;
+                if (gamepad.buttons[15]?.pressed && player.x < canvas.width - 20) player.x += player.speed;
+                if (gamepad.buttons[12]?.pressed && player.y > 20) player.y -= player.speed;
+                if (gamepad.buttons[13]?.pressed && player.y < canvas.height - 20) player.y += player.speed;
+
+                // Boton A - Disparo
+                if (gamepad.buttons[0]?.pressed && player.fireTimer >= player.fireRate) {
+                    shootWeapon();
+                    player.fireTimer = 0;
+                }
+
+                // Boton X - God Mode (con debounce)
+                if (gamepad.buttons[2]?.pressed && !godModeButtonPressed) {
+                    godModeButtonPressed = true;
+                    godMode = !godMode;
+                    const indicator = document.getElementById('godModeIndicator');
+                    if (godMode) {
+                        indicator.classList.remove('hidden');
+                    } else {
+                        indicator.classList.add('hidden');
+                    }
+                } else if (!gamepad.buttons[2]?.pressed) {
+                    godModeButtonPressed = false;
+                }
+
+                // RB - Subir nivel (con debounce)
+                if (gamepad.buttons[5]?.pressed && !levelUpButtonPressed) {
+                    levelUpButtonPressed = true;
+                    if (stage < 5) {
+                        stage++;
+                        enemies = [];
+                        bosses = [];
+                        enemyBullets = [];
+                        frame = 0;
+                        updateUI();
+                    }
+                } else if (!gamepad.buttons[5]?.pressed) {
+                    levelUpButtonPressed = false;
+                }
+
+                // RT - Bajar nivel (con debounce)
+                if (gamepad.buttons[7]?.pressed && !levelDownButtonPressed) {
+                    levelDownButtonPressed = true;
+                    if (stage > 1) {
+                        stage--;
+                        enemies = [];
+                        bosses = [];
+                        enemyBullets = [];
+                        frame = 0;
+                        updateUI();
+                    }
+                } else if (!gamepad.buttons[7]?.pressed) {
+                    levelDownButtonPressed = false;
+                }
+
+            }
+
+            // === KEYBOARD INPUT ===
             if (keys['ArrowLeft'] && player.x > 20) player.x -= player.speed;
             if (keys['ArrowRight'] && player.x < canvas.width - 20) player.x += player.speed;
             if (keys['ArrowUp'] && player.y > 20) player.y -= player.speed;
             if (keys['ArrowDown'] && player.y < canvas.height - 20) player.y += player.speed;
-            
+
             player.fireTimer++;
             if (keys[' '] && player.fireTimer >= player.fireRate) {
                 shootWeapon();
@@ -2397,7 +2482,6 @@
             gameState = 'playing';
             document.getElementById('startScreen').classList.add('hidden');
             resetGame();
-            gameLoop();
         }
         
         function restartGame() {
@@ -2434,10 +2518,42 @@
             }
         }
         
+        function handleGamepadMenu() {
+            const gamepad = readGamepad();
+            if (!gamepad) return;
+
+            // LT (buttons[6]) - Continuar/Comenzar (con debounce)
+            if (gamepad.buttons[6]?.pressed && !startButtonPressed) {
+                startButtonPressed = true;
+                if (gameState === 'start') {
+                    startGame();
+                } else if (gameState === 'playing' && paused) {
+                    togglePause();
+                } else if (gameState === 'over' || gameState === 'victory') {
+                    restartGame();
+                }
+            } else if (!gamepad.buttons[6]?.pressed) {
+                startButtonPressed = false;
+            }
+
+            // LB (buttons[4]) - Pausa (con debounce) - tambien funciona para reanudar
+            if (gamepad.buttons[4]?.pressed && !pauseButtonPressed) {
+                pauseButtonPressed = true;
+                if (gameState === 'playing') {
+                    togglePause();
+                }
+            } else if (!gamepad.buttons[4]?.pressed) {
+                pauseButtonPressed = false;
+            }
+        }
+
         function gameLoop() {
             // Always continue the loop
             requestAnimationFrame(gameLoop);
-            
+
+            // Handle gamepad input for menus (works in all states)
+            handleGamepadMenu();
+
             if (gameState !== 'playing' || paused) return;
             
             frame++;
@@ -2526,9 +2642,27 @@
         document.addEventListener('keyup', (e) => {
             keys[e.key] = false;
         });
-        
+
+        // === GAMEPAD SUPPORT ===
+        window.addEventListener('gamepadconnected', (e) => {
+            gamepadConnected = true;
+            gamepadIndex = e.gamepad.index;
+            document.getElementById('gamepadIndicator').classList.remove('hidden');
+            console.log('🎮 Gamepad conectado:', e.gamepad.id);
+        });
+
+        window.addEventListener('gamepaddisconnected', (e) => {
+            if (e.gamepad.index === gamepadIndex) {
+                gamepadConnected = false;
+                gamepadIndex = null;
+                document.getElementById('gamepadIndicator').classList.add('hidden');
+                console.log('🎮 Gamepad desconectado');
+            }
+        });
+
         // Initialize
         updateUI();
+        gameLoop(); // Start loop for gamepad input in menus
     </script>
 </body>
 </html>
